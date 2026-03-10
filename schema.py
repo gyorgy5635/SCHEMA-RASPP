@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Module for SCHEMA tools.
 
 This module provides core functions used by all the SCHEMA tools.
@@ -35,7 +35,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 import sys, string, random
 import pdb
 
-DIGITS_LETTERS = string.digits + string.letters
+DIGITS_LETTERS = string.digits + string.ascii_letters
 
 def alignPDBResidues(residues, aligned_parent_protein, aligned_pdb_protein, library_parent_protein, chain_identifiers):
 	"""Align the PDB residues to the aligned parent protein sequence, following the parent/PDB alignment."""
@@ -86,31 +86,21 @@ def alignPDBResidues(residues, aligned_parent_protein, aligned_pdb_protein, libr
 			# advance the indices.  This brings the sequences back into
 			# register.
 			pdbres = pdb.three_to_one_map[residues[k].residue]
-			#print li, aligned_parent_protein[j], aligned_pdb_protein[j], pdbres
 			while aligned_parent_protein[j] != li:
 				pdbres = pdb.three_to_one_map[residues[k].residue]
 				if aligned_pdb_protein[j] != '-':
 					k += 1
 				j += 1
-				#print "*", li, aligned_parent_protein[j], aligned_pdb_protein[j], pdbres
-			#print "end"
 			# Now, if the aligned PDB has a gap, insert a gap
 			# into the residues list, otherwise insert the residue.
 			if aligned_pdb_protein[j] == '-':
 				new_residues.append(pdb.Residue(None))
 			else:
 				pdbres = pdb.three_to_one_map[residues[k].residue]
-				#print i, j, k
-				#print li, aligned_parent_protein[j], aligned_pdb_protein[j], pdbres
-				#print library_parent_protein[:i+1]
-				#print aligned_parent_protein[:j+1]
-				#print aligned_pdb_protein[:j+1]
-				#print pdb.sequence(new_residues)
-				#print pdb.sequence(residues)[:k+1]
 				# Check to make sure we're adding the expected residue
 				if aligned_pdb_protein[j] != pdbres:
 					err_string = "Expected residue %s at aligned position %d based on alignment, but PDB had %s at corresponding residue %d.  Aborting..."
-					raise ValueError, err_string % (aligned_pdb_protein[j], j+1, pdbres, k+1)
+					raise ValueError(err_string % (aligned_pdb_protein[j], j+1, pdbres, k+1))
 				new_residues.append(residues[k])
 				k += 1
 			j += 1
@@ -204,7 +194,7 @@ def base(number, radix):
 	"""Returns a string representation of the number in the base indicated by radix."""
 	# Inverse function to int(str,radix) and long(str,radix)
 	if not 2 <= radix <= 36:
-		raise ValueError, "radix must be in 2..36"
+		raise ValueError("radix must be in 2..36")
 	result = []
 	addon = result.append
 	if number < 0:
@@ -243,7 +233,6 @@ def getChimeraDisruption(chimera_blocks, contacts, fragments, parents):
 		pair = (parents[parent_indices[frag_i]][i],	parents[parent_indices[frag_j]][j])
 		# If pair doesn't exist in any parent, it's counted as disruptive
 		if pair not in [(p[i], p[j]) for p in parents]:
-			#print chimera_blocks, i+1, j+1
 			num_disruptions += 1
 	return num_disruptions
 
@@ -288,7 +277,7 @@ def readMultipleSequenceAlignmentFile(f):
 		key = flds[0]
 		seq = flds[1]
 		# Extract the parent sequence
-		if parent_dict.has_key(key):
+		if key in parent_dict:
 			parent_dict[key] += seq
 		else:
 			keys.append(key)
@@ -307,7 +296,7 @@ def readCrossoverFile(f):
 		try:
 			crossovers = [int(x) for x in line.split()]
 		except ValueError:
-			print "Non-numeric data found in crossover file:\n", line.split()
+			print("Non-numeric data found in crossover file:\n", line.split())
 	crossovers.sort()
 	return crossovers
 
@@ -341,7 +330,7 @@ def averageMutation(fragments, parents):
 	n = len(fragments)
 	# Create a mutation matrix: how many mutations
 	mut_dict = mutationMatrix(fragments, parents)			
-	for i in xrange(p**n):
+	for i in range(p**n):
 		# The next two lines turn i into a chimera block pattern 
 		# (e.g., 0 -> '11111111', 1 -> '11111112', 2 -> '11111113'...)
 		n2c = base(i,p)
@@ -465,5 +454,5 @@ def generateRandomFragments(seq_length, num_fragments, min_length):
 def mean(x):
 	"""Computes the average of a list of numbers."""
 	if len(x) == 0:
-		raise ValueError, "Cannot take average of zero-length list"
+		raise ValueError("Cannot take average of zero-length list")
 	return sum(x)/float(len(x))

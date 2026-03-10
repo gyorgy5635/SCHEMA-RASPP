@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Script for extracting sequences from a PDB file.
 
     ******************************************************************
@@ -30,7 +30,7 @@ Silberg, J. et al., "SCHEMA-guided protein recombination," Methods in Enzymology
 Endelman, J. et al., "Site-directed protein recombination as a shortest-path problem," Protein Engineering, Design & Selection 17(7):589-594 (2005).
 """
 
-import sys, string, os
+import sys, os
 import pdb, schema
 
 ARG_PDB_FILE = 'pdb'
@@ -47,7 +47,7 @@ def parse_arguments(args):
 			key = arg[1:]
 			arg_dict[key] = None
 		else:
-			if arg_dict.has_key(key):
+			if key in arg_dict:
 				if arg_dict[key]:
 					if type(arg_dict[key]) is list:
 						arg_dict[key] = arg_dict[key]+[arg]
@@ -60,11 +60,11 @@ def parse_arguments(args):
 	return arg_dict
 
 def print_usage(args):
-	print 'Usage: python', args[0].split(os.path.sep)[-1], " [options]"
-	print 'Options:\n',\
-		"\t-%s <PDB file>\n" % ARG_PDB_FILE, \
-		"\t[-%s <PDB chain list, e.g. A B C>]\n" % ARG_CHAINS,\
-		"\t[-%s <contacts output file>]" % ARG_OUTPUT_FILE
+	print('Usage: python', args[0].split(os.path.sep)[-1], " [options]")
+	print('Options:\n',
+		"\t-%s <PDB file>\n" % ARG_PDB_FILE,
+		"\t[-%s <PDB chain list, e.g. A B C>]\n" % ARG_CHAINS,
+		"\t[-%s <contacts output file>]" % ARG_OUTPUT_FILE)
 
 def confirm_arguments(arg_dict):
 	# Are arguments okay?
@@ -77,10 +77,10 @@ def confirm_arguments(arg_dict):
 			return
 			
 		if not ARG_PDB_FILE in arg_keys:
-			print "  You must provide a PDB file (-%s <file>)" % ARG_PDB_FILE
+			print("  You must provide a PDB file (-%s <file>)" % ARG_PDB_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_PDB_FILE]):
-			print "  Can't find PDB file %s" % arg_dict[ARG_PDB_FILE]
+			print("  Can't find PDB file %s" % arg_dict[ARG_PDB_FILE])
 			res = False
 		
 	except:
@@ -105,7 +105,7 @@ def main(args):
 	# chains which correspond to the protein whose contacts are being evaluated.
 	# Most often, chain 'A' (in the case of multiple chains) or chain ' ' (only one chain)
 	# will be the appropriate choice.
-	if arg_dict.has_key(ARG_CHAINS):
+	if ARG_CHAINS in arg_dict:
 		chains = arg_dict[ARG_CHAINS]
 		if type(chains) is list:
 			chain_identifiers = chains + [' ']
@@ -115,25 +115,25 @@ def main(args):
 		chain_identifiers = ['A',' ']
 	
 	# 	The file name for output.
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
-		output_file = file(arg_dict[ARG_OUTPUT_FILE], 'w')
+	if ARG_OUTPUT_FILE in arg_dict:
+		output_file = open(arg_dict[ARG_OUTPUT_FILE], 'w')
 	else:
 		output_file = sys.stdout
 	
 	# Read in the PDB file to create a list of residues.
-	residues = pdb.File().read(file(pdb_file, 'r'))
+	residues = pdb.File().read(open(pdb_file, 'r'))
 	
 	# Filter residues not in selected chains
 	residue_seq = pdb.sequence(residues, chain_identifiers)
 	if residue_seq == '':
-		print "No residues found for chain(s) %s.  Aborting..." % chain_identifiers
+		print("No residues found for chain(s) %s.  Aborting..." % chain_identifiers)
 		return
 	
 	# Print it
 	output_file.write('# Residue sequence for chain(s) %s from PDB file %s\n%s' % \
 		(chain_identifiers, pdb_file, residue_seq))
 	
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
+	if ARG_OUTPUT_FILE in arg_dict:
 		output_file.close()
 
 		

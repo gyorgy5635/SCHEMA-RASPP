@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Script for producing a RASPP curve: the average disruption (energy)
 and average mutation of libraries that have the lowest average energy
 given constraints on fragment length.
@@ -32,7 +32,7 @@ Silberg, J. et al., "SCHEMA-guided protein recombination," Methods in Enzymology
 Endelman, J. et al., "Site-directed protein recombination as a shortest-path problem," Protein Engineering, Design & Selection 17(7):589-594 (2005).
 """
 
-import sys, os, string, math, random, time
+import sys, os, math, random, time
 import pdb, schema, raspp
 
 ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE = 'msa'
@@ -55,8 +55,8 @@ def parse_arguments(args):
 		if arg[0] == '-':
 			key = arg[1:]
 		else:
-			if arg_dict.has_key(key):
-				if arg_dict[key] is list:
+			if key in arg_dict:
+				if type(arg_dict[key]) is list:
 					arg_dict[key] = arg_dict[key]+[arg]
 				else:
 					arg_dict[key] = [arg_dict[key],arg]
@@ -65,17 +65,17 @@ def parse_arguments(args):
 	return arg_dict
 
 def print_usage(args):
-	print 'Usage: python', args[0].split(os.path.sep)[-1], " [options]"
-	print "Options:\n", \
-		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE, \
-		"\t-%s <contact file>\n" % ARG_CONTACT_FILE, \
-		'\t-%s <# crossovers>\n' % ARG_NUM_CROSSOVERS, \
-		'\t[-%s <# libraries to generate>]\n' % ARG_NUM_LIBRARIES, \
-		'\t[-%s <random number seed>]\n' % ARG_RANDOM_SEED, \
-		'\t[-%s <max. chimeras generated per library>]\n' % ARG_MAX_CHIMERAS_PER_LIBRARY, \
-		'\t[-%s <min. fragment length>]\n' % ARG_MIN_FRAGMENT_SIZE, \
-		'\t[-%s <bin width>]\n' % ARG_BIN_WIDTH, \
-		'\t[-%s <output file>]' % ARG_OUTPUT_FILE
+	print('Usage: python', args[0].split(os.path.sep)[-1], " [options]")
+	print("Options:\n",
+		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE,
+		"\t-%s <contact file>\n" % ARG_CONTACT_FILE,
+		'\t-%s <# crossovers>\n' % ARG_NUM_CROSSOVERS,
+		'\t[-%s <# libraries to generate>]\n' % ARG_NUM_LIBRARIES,
+		'\t[-%s <random number seed>]\n' % ARG_RANDOM_SEED,
+		'\t[-%s <max. chimeras generated per library>]\n' % ARG_MAX_CHIMERAS_PER_LIBRARY,
+		'\t[-%s <min. fragment length>]\n' % ARG_MIN_FRAGMENT_SIZE,
+		'\t[-%s <bin width>]\n' % ARG_BIN_WIDTH,
+		'\t[-%s <output file>]' % ARG_OUTPUT_FILE)
 
 
 def confirm_arguments(arg_dict):
@@ -88,24 +88,23 @@ def confirm_arguments(arg_dict):
 			return
 			
 		if not ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE in arg_keys:
-			print "  You must provide a library file (-%s <alignment file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE
+			print("  You must provide a library file (-%s <alignment file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]):
-			print "  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]
+			print("  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE])
 			res = False
 			
 		if not ARG_CONTACT_FILE in arg_keys:
-			print "  You must provide a contact file (-%s <contact file>)" % ARG_CONTACT_FILE
+			print("  You must provide a contact file (-%s <contact file>)" % ARG_CONTACT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_CONTACT_FILE]):
-			print "  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE]
+			print("  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE])
 			res = False
 			
 		if not ARG_NUM_CROSSOVERS in arg_keys:
-			print "  You must specify the number of crossovers (-%s <number of crossovers>)" % ARG_NUM_CROSSOVERS
+			print("  You must specify the number of crossovers (-%s <number of crossovers>)" % ARG_NUM_CROSSOVERS)
 			res = False
-	except Exception, e:
-		#print e
+	except Exception as e:
 		res = False
 	return res
 
@@ -126,28 +125,28 @@ def main(args):
 
 	# Read the alignment file to create a list of parents.
 	# The parents will appear in the list in the order in which they appear in the file.
-	parent_list = schema.readMultipleSequenceAlignmentFile(file(msa_file, 'r'))
+	parent_list = schema.readMultipleSequenceAlignmentFile(open(msa_file, 'r'))
 	parents = [p for (k,p) in parent_list]
 	
 	# Get the contacts
-	pdb_contacts = schema.readContactFile(file(arg_dict[ARG_CONTACT_FILE], 'r'))
+	pdb_contacts = schema.readContactFile(open(arg_dict[ARG_CONTACT_FILE], 'r'))
 	
 	# Establish connection to output, either file or, if no output file is 
 	# specified, to standard output.
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
-		output_file = file(arg_dict[ARG_OUTPUT_FILE], 'w')
+	if ARG_OUTPUT_FILE in arg_dict:
+		output_file = open(arg_dict[ARG_OUTPUT_FILE], 'w')
 	else:
 		output_file = sys.stdout
 
 	# Get the minimum fragment size.
-	if arg_dict.has_key(ARG_MIN_FRAGMENT_SIZE):
+	if ARG_MIN_FRAGMENT_SIZE in arg_dict:
 		min_length = int(arg_dict[ARG_MIN_FRAGMENT_SIZE])
 	else:
 		output_file.write("# No minimum fragment length specified; using L=4.\n")
 		min_length = 4
 
 	# Get the bin width
-	if arg_dict.has_key(ARG_BIN_WIDTH):
+	if ARG_BIN_WIDTH in arg_dict:
 		bin_width = float(arg_dict[ARG_BIN_WIDTH])
 	else:
 		output_file.write("# No bin width specified; using bin width=1.0.\n")
@@ -166,29 +165,29 @@ def main(args):
 		error_msg = "Minimum fragment length of %d is too large.\n%d " + \
 					"fragments with length %d cannot be found in a " + \
 					"sequence of length %d (with identities removed).  Aborting..."
-		print error_msg % (min_length, num_fragments, min_length, len(parents[0]))
+		print(error_msg % (min_length, num_fragments, min_length, len(parents[0])))
 		return
 
 	contacts = schema.getSCHEMAContacts(pdb_contacts, parents)
 	energies = raspp.make_4d_energies(contacts, parents)
 	avg_energies = raspp.calc_average_energies(energies, parents)
 
-	tstart = time.clock()
+	tstart = time.perf_counter()
 	res = raspp.RASPP(avg_energies, parents, num_fragments-1, min_length)
-	output_file.write("# RASPP took %1.2f secs\n" % (time.clock()-tstart,))
+	output_file.write("# RASPP took %1.2f secs\n" % (time.perf_counter()-tstart,))
 	output_file.write("# RASPP found %d results\n" % (len(res),))
 
-	tstart = time.clock()
+	tstart = time.perf_counter()
 	curve = raspp.curve(res, parents, bin_width)
 	output_file.write("# RASPP found %d unique (<E>,<m>) points\n" % (len(curve),))
-	output_file.write("# RASPP curve took %1.2f secs\n" % (time.clock()-tstart,))
+	output_file.write("# RASPP curve took %1.2f secs\n" % (time.perf_counter()-tstart,))
 	output_file.write("# <E>\t<m>\tcrossover points\n")
 	for (average_E, average_m, crossovers) in curve:
 		xover_pat = '%d '*len(crossovers)
 		xover_str = xover_pat % tuple(crossovers)
 		output_file.write('%1.4f\t%1.4f\t%s\n' % (average_E, average_m, xover_str))
 
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
+	if ARG_OUTPUT_FILE in arg_dict:
 		output_file.close()
 
 def main_wrapper():

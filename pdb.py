@@ -1,6 +1,6 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 
-import sys, os, math, string
+import sys, os, math
 
 three_to_one_map =  {'ALA':'A', 'CYS':'C', 'ASP':'D', 'GLU':'E', 'PHE':'F', \
 			'GLY':'G', 'HIS':'H', 'ILE':'I', 'LYS':'K', 'LEU':'L', \
@@ -130,7 +130,6 @@ class File:
 		for line in lines:
 			if line[0:4] == 'ATOM':
 				atom_lines.append(line)
-				#print pdb.Atom(line)
 
 		while atom_lines != []:
 			residue = Residue(atom_lines)
@@ -148,5 +147,5 @@ def sequence(residues, chain_ids=['A',' ']):
 	return ''.join([three_to_one_map[r.residue] for r in residues if r.chain in chain_ids])
 	
 def get(file_name, chain_ids=['A',' ']):
-	residues = File().read(file(file_name,'r'))
-	print sequence(residues, chain_ids)
+	residues = File().read(open(file_name, 'r'))
+	print(sequence(residues, chain_ids))

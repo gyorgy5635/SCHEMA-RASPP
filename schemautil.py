@@ -1,10 +1,10 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 
-import sys, os, math, string, random
+import sys, os, math, random
 
 def random_contact_map(length, num_contacts):
 	# Generate a random contact map
-	residues = range(length)
+	residues = list(range(length))
 	contacts = []
 	pairs = []
 	for i in range(num_contacts):
@@ -35,4 +35,3 @@ def random_protein_with_identity(template_prot, seq_id):
 		else:
 			prot.append(aas[random.randint(0,len(aas)-1)])
 	return ''.join(prot)
-

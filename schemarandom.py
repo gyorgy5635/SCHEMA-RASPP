@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Script for randomly enumerating crossover points and evaluating average SCHEMA energy and mutation of the resulting libraries.
 
     ******************************************************************
@@ -30,7 +30,7 @@ Silberg, J. et al., "SCHEMA-guided protein recombination," Methods in Enzymology
 Endelman, J. et al., "Site-directed protein recombination as a shortest-path problem," Protein Engineering, Design & Selection 17(7):589-594 (2005).
 """
 
-import sys, os, string, math, random, time
+import sys, os, math, random, time
 import pdb, schema, raspp
 
 ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE = 'msa'
@@ -52,8 +52,8 @@ def parse_arguments(args):
 		if arg[0] == '-':
 			key = arg[1:]
 		else:
-			if arg_dict.has_key(key):
-				if arg_dict[key] is list:
+			if key in arg_dict:
+				if type(arg_dict[key]) is list:
 					arg_dict[key] = arg_dict[key]+[arg]
 				else:
 					arg_dict[key] = [arg_dict[key],arg]
@@ -62,16 +62,16 @@ def parse_arguments(args):
 	return arg_dict
 
 def print_usage(args):
-	print 'Usage: python', args[0].split(os.path.sep)[-1], " [options]"
-	print "Options:\n", \
-		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE, \
-		"\t-%s <contact file>\n" % ARG_CONTACT_FILE, \
-		'\t-%s <# crossovers>\n' % ARG_NUM_CROSSOVERS, \
-		'\t[-%s <# libraries to generate>]\n' % ARG_NUM_LIBRARIES, \
-		'\t[-%s <random number seed>]\n' % ARG_RANDOM_SEED, \
-		'\t[-%s <max. chimeras generated per library>]\n' % ARG_MAX_CHIMERAS_PER_LIBRARY, \
-		'\t[-%s <min. fragment length>]\n' % ARG_MIN_FRAGMENT_SIZE, \
-		'\t[-%s <output file>]' % ARG_OUTPUT_FILE
+	print('Usage: python', args[0].split(os.path.sep)[-1], " [options]")
+	print("Options:\n",
+		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE,
+		"\t-%s <contact file>\n" % ARG_CONTACT_FILE,
+		'\t-%s <# crossovers>\n' % ARG_NUM_CROSSOVERS,
+		'\t[-%s <# libraries to generate>]\n' % ARG_NUM_LIBRARIES,
+		'\t[-%s <random number seed>]\n' % ARG_RANDOM_SEED,
+		'\t[-%s <max. chimeras generated per library>]\n' % ARG_MAX_CHIMERAS_PER_LIBRARY,
+		'\t[-%s <min. fragment length>]\n' % ARG_MIN_FRAGMENT_SIZE,
+		'\t[-%s <output file>]' % ARG_OUTPUT_FILE)
 
 
 def confirm_arguments(arg_dict):
@@ -84,24 +84,23 @@ def confirm_arguments(arg_dict):
 			return
 			
 		if not ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE in arg_keys:
-			print "  You must provide a library file (-%s <alignment file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE
+			print("  You must provide a library file (-%s <alignment file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]):
-			print "  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]
+			print("  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE])
 			res = False
 			
 		if not ARG_CONTACT_FILE in arg_keys:
-			print "  You must provide a contact file (-%s <contact file>)" % ARG_CONTACT_FILE
+			print("  You must provide a contact file (-%s <contact file>)" % ARG_CONTACT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_CONTACT_FILE]):
-			print "  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE]
+			print("  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE])
 			res = False
 			
 		if not ARG_NUM_CROSSOVERS in arg_keys:
-			print "  You must specify the number of crossovers (-%s <number of crossovers>)" % ARG_NUM_CROSSOVERS
+			print("  You must specify the number of crossovers (-%s <number of crossovers>)" % ARG_NUM_CROSSOVERS)
 			res = False
-	except Exception, e:
-		#print e
+	except Exception as e:
 		res = False
 	return res
 
@@ -122,27 +121,27 @@ def main(args):
 
 	# Read the alignment file to create a list of parents.
 	# The parents will appear in the list in the order in which they appear in the file.
-	parent_list = schema.readMultipleSequenceAlignmentFile(file(msa_file, 'r'))
+	parent_list = schema.readMultipleSequenceAlignmentFile(open(msa_file, 'r'))
 	parents = [p for (k,p) in parent_list]
 	
 	# Get the contacts
-	pdb_contacts = schema.readContactFile(file(arg_dict[ARG_CONTACT_FILE], 'r'))
+	pdb_contacts = schema.readContactFile(open(arg_dict[ARG_CONTACT_FILE], 'r'))
 	
 	# Establish connection to output, either file or, if no output file is 
 	# specified, to standard output.
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
-		output_file = file(arg_dict[ARG_OUTPUT_FILE], 'w')
+	if ARG_OUTPUT_FILE in arg_dict:
+		output_file = open(arg_dict[ARG_OUTPUT_FILE], 'w')
 	else:
 		output_file = sys.stdout
 
 	# Get the number of libraries to evaluate.
-	if arg_dict.has_key(ARG_NUM_LIBRARIES):
+	if ARG_NUM_LIBRARIES in arg_dict:
 		num_libraries = int(arg_dict[ARG_NUM_LIBRARIES])
 	else:
 		num_libraries = int(1e3)
 
 	# Get the minimum fragment size.
-	if arg_dict.has_key(ARG_MIN_FRAGMENT_SIZE):
+	if ARG_MIN_FRAGMENT_SIZE in arg_dict:
 		min_length = int(arg_dict[ARG_MIN_FRAGMENT_SIZE])
 	else:
 		min_length = 4
@@ -154,12 +153,12 @@ def main(args):
 	num_parents = len(parents)
 	library_size = num_parents**num_fragments
 
-	if arg_dict.has_key(ARG_MAX_CHIMERAS_PER_LIBRARY):
+	if ARG_MAX_CHIMERAS_PER_LIBRARY in arg_dict:
 		max_chimeras = min(library_size, int(arg_dict[ARG_MAX_CHIMERAS_PER_LIBRARY]))
 	else:
 		max_chimeras = library_size
 
-	if arg_dict.has_key(ARG_RANDOM_SEED):
+	if ARG_RANDOM_SEED in arg_dict:
 		random.seed(int(arg_dict[ARG_RANDOM_SEED]))
 	
 
@@ -169,11 +168,11 @@ def main(args):
 		error_msg = "Minimum diversity length of %d is too large.\n%d " + \
 					"fragments with diversity %d cannot be found in a " + \
 					"sequence of length %d (with identities removed).  Aborting..."
-		print error_msg % (min_length, num_fragments, min_length, len(parents[0]))
+		print(error_msg % (min_length, num_fragments, min_length, len(parents[0])))
 		return
 
 	
-	start_time = time.clock()
+	start_time = time.perf_counter()
 
 	output_file.write("# <E>\t<m>\tcrossover points\n")
 	random_crossovers = []
@@ -221,9 +220,9 @@ def main(args):
 		xover_str = xover_pat % tuple(crossovers)
 		output_file.write(('%1.4f\t%1.4f\t%s\n') % (average_E, average_m, xover_str))
 		output_file.flush()
-	total_time = time.clock()-start_time
+	total_time = time.perf_counter()-start_time
 	output_file.write('# Finished in %1.2f seconds (%d libraries, %d chimeras)\n' % (total_time, num_libraries, num_libraries*max_chimeras))
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
+	if ARG_OUTPUT_FILE in arg_dict:
 		output_file.close()
 
 def main_wrapper():

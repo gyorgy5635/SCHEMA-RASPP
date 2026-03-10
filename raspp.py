@@ -1,6 +1,6 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 
-import sys, os, math, string, random, copy, time
+import sys, os, math, random, copy, time
 import schema
 
 HUGE_NUMBER = 1.0e10
@@ -140,13 +140,11 @@ def calc_average_energies(energies, parents):
 	num_residues = len(parents[0])
 	num_parents = len(parents)
 	avg_energies = []
-	#energy_dict = dict([(x,1) for x in energies])
 	for i in range(num_residues-1):
 		for j in range(i+1, num_residues):
 			ij = [(ri,rj,p,q) for (ri,rj,p,q) in energies if ri==i and rj==j]
 			nij = len(ij)
 			nij_same = len([(ri,rj) for (ri,rj,p,q) in ij if ri==i and rj==j and p==q])
-			#print i, j, nij, nij_same
 			diff = nij - nij_same
 			avg = float(diff)/(num_parents**2)
 			avg_energies.append((i,j,avg))
@@ -285,15 +283,14 @@ def RASPP(avg_energies, parents, num_crossovers, min_fragment_diversity):
 			  (num_crossovers, min_fragment_diversity) + \
 			  "is impossible given parent non-identical sequence length of %d." % \
 			  (len(collapsed_parents[0]),)
-		raise ValueError, err_string
+		raise ValueError(err_string)
 	
 
 	results = []
 	# Compute the arc lengths.	
-	tstart = time.clock()
+	tstart = time.perf_counter()
 	arc_lengths = calc_arc_lengths(avg_energies, parents)
-	ttot = time.clock()-tstart
-	#print "# Arc lengths calculated in %1.2f sec" % ttot
+	ttot = time.perf_counter()-tstart
 	num_residues = len(collapsed_parents[0])
 	
 	# Now collapse the arc lengths.  It is more efficient to 
@@ -305,11 +302,9 @@ def RASPP(avg_energies, parents, num_crossovers, min_fragment_diversity):
 	min_l_min = min_fragment_diversity
 	max_l_min = int(math.floor(num_residues/(num_crossovers+1.0)))+1
 	for l_min in range(min_l_min, max_l_min+1):
-		#print "l_min:", l_min, min_l_min, max_l_min
-		min_l_max =int(math.ceil(num_residues/(num_crossovers+1.0)))
+		min_l_max = int(math.ceil(num_residues/(num_crossovers+1.0)))
 		max_l_max = num_residues-num_crossovers*l_min+1
 		for l_max in range(min_l_max, max_l_max+1):
-			#print "  l_max:", l_max, min_l_max, max_l_max+1
 			# Find set of crossovers which minimize the average energy consistent with fragment-length constraints
 			res = get_shortest_path(arc_lengths, collapsed_parents, num_crossovers, l_min, l_max)
 			if res:
@@ -354,9 +349,9 @@ def get_shortest_path(arc_lengths, parents, num_crossovers, l_min, l_max):
 	# The paths 
 	for k in range(1, num_crossovers):
 		if debug:
-			print "k=%d" % k
+			print("k=%d" % k)
 			for p in paths:
-				print "%s\t%1.2f" % (p.frag_lengths(parents[0]), p.length)
+				print("%s\t%1.2f" % (p.frag_lengths(parents[0]), p.length))
 		# The only allowable range for node j is where previous
 		# fragments satisfy the length constraints.  There have
 		# been k of them so far, so j >= k*l_min.
@@ -367,7 +362,6 @@ def get_shortest_path(arc_lengths, parents, num_crossovers, l_min, l_max):
 		# For example, if there are 50 residues, this is the third
 		# crossover of four, and l_min = 10, then j must be no more than 30.
 		max_j = num_residues-(num_crossovers-k)*l_min+1
-		#print "minj, maxj", min_j, max_j
 		# At the beginning of this loop, paths contains the set of shortest
 		# paths that are allowable and end nodes given by the final entry
 		# in the .indices element of each Path object in shortest_paths.
@@ -375,7 +369,7 @@ def get_shortest_path(arc_lengths, parents, num_crossovers, l_min, l_max):
 		# that are allowable and end at nodes j.
 		shortest_paths = []
 		for j in range(min_j, max_j):
-			best_path = None  #Path([], HUGE_NUMBER)		
+			best_path = None
 			for p in paths:
 				i = p.indices[-1]
 				# Track the shortest path 
@@ -386,17 +380,15 @@ def get_shortest_path(arc_lengths, parents, num_crossovers, l_min, l_max):
 					if not best_path or p.length + arc_lengths[i][j] < best_path.length:
 						best_path = Path(p.indices+[j], p.length + arc_lengths[i][j])
 			# If at least one allowable path was found, we've got a shortest path to j.
-			if best_path: #.length < HUGE_NUMBER:
+			if best_path:
 				shortest_paths.append(best_path)
 		# Now start all over again with this new set of shortest paths to column k.
 		paths = shortest_paths
 
 	if debug:
-		print "final"
+		print("final")
 		for p in paths:
-			print "%s\t%1.2f" % (p.frag_lengths(parents[0]), p.length)
-		#for i in range(len(paths)):
-		#	print "      %d\t%s\t%1.2f" % (i, paths[i].frag_lengths(parents[0]), paths[i].length)
+			print("%s\t%1.2f" % (p.frag_lengths(parents[0]), p.length))
 
 	# Now filter out paths with illegal last-fragment lengths
 	allowable_paths = []
@@ -410,9 +402,6 @@ def get_shortest_path(arc_lengths, parents, num_crossovers, l_min, l_max):
 	lengths = [p.length for p in paths]
 	if len(lengths) > 0:
 		(avg_energy, i) = min_index(lengths)
-		#frag_lengths = paths[i].frag_lengths(parents[0])
-		#if min(frag_lengths) < l_min or max(frag_lengths)>l_max:
-		#	print "Illegal lengths: min %d, max %d, actual %s" % (l_min, l_max, frag_lengths)
 		return (avg_energy, paths[i].crossovers(), l_min, l_max)
 	else:
 		return None
@@ -426,13 +415,11 @@ def curve(results, parents, bin_width, max_samples=1e10):
 		return
 	(e, xovers, lmin, lmax) = results[0]
 	num_crossovers = len(xovers)
-	#print "# No. of RASPP results:", len(results)
 	# Because the RASPP curve does not involve the length min/max values, we can collapse
 	# the set of RASPP results to only those with unique crossovers.  This can
 	# greatly improve performance, since crossover patterns are often duplicated
 	# across min/max values.
 	unique_results = set([(avg_energy, tuple(crossovers)) for (avg_energy, crossovers, l_min, l_max) in results])
-	#print "# No. of unique RASPP results:", len(unique_results)
 	# Now compute the average mutation levels for these unique libraries.
 	avg_E_ms = []
 	for (avg_energy, crossovers) in unique_results:
@@ -479,7 +466,5 @@ def curve(results, parents, bin_width, max_samples=1e10):
 			fragments = schema.getFragments(crossovers, parents[0])
 			true_avg_m = schema.averageMutation(fragments, parents)
 			final_curve.append((E, true_avg_m, crossovers))
-			#print "%1.2f\t%1.2f" % (true_avg_m, approx_m)
 		
 	return final_curve
-

@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Script for calculating SCHEMA energies.
 
     ******************************************************************
@@ -30,7 +30,7 @@ Silberg, J. et al., "SCHEMA-guided protein recombination," Methods in Enzymology
 Endelman, J. et al., "Site-directed protein recombination as a shortest-path problem," Protein Engineering, Design & Selection 17(7):589-594 (2005).
 """
 
-import sys, string, os
+import sys, os
 import pdb, schema
 
 ARG_PRINT_E = 'E'
@@ -56,7 +56,7 @@ def parse_arguments(args):
 			key = arg[1:]
 			arg_dict[key] = None
 		else:
-			if arg_dict.has_key(key):
+			if key in arg_dict:
 				if arg_dict[key]:
 					if type(arg_dict[key]) is list:
 						arg_dict[key] = arg_dict[key]+[arg]
@@ -69,15 +69,15 @@ def parse_arguments(args):
 	return arg_dict
 
 def print_usage(args):
-	print 'Usage: python', args[0].split(os.path.sep)[-1], ' [options]'
-	print 'Options:\n', \
-		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE, \
-		'\t-%s <contact file>\n' % ARG_CONTACT_FILE, \
-		'\t-%s <crossover file>\n' % ARG_CROSSOVER_FILE, \
-		'\t[-%s <chimera list>]\n' % ARG_CHIMERAS, \
-		'\t[-%s]\n' % ARG_PRINT_E, \
-		'\t[-%s]\n' % ARG_PRINT_M, \
-		'\t[-%s <output file>]' % ARG_OUTPUT_FILE
+	print('Usage: python', args[0].split(os.path.sep)[-1], ' [options]')
+	print('Options:\n',
+		'\t-%s <alignment file>\n' % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE,
+		'\t-%s <contact file>\n' % ARG_CONTACT_FILE,
+		'\t-%s <crossover file>\n' % ARG_CROSSOVER_FILE,
+		'\t[-%s <chimera list>]\n' % ARG_CHIMERAS,
+		'\t[-%s]\n' % ARG_PRINT_E,
+		'\t[-%s]\n' % ARG_PRINT_M,
+		'\t[-%s <output file>]' % ARG_OUTPUT_FILE)
 
 def confirm_arguments(arg_dict):
 	# Are arguments okay?
@@ -89,32 +89,31 @@ def confirm_arguments(arg_dict):
 			return
 			
 		if not ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE in arg_keys:
-			print "  You must provide a library file (-%s <file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE
+			print("  You must provide a library file (-%s <file>)" % ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]):
-			print "  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]
+			print("  Can't find library file %s" % arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE])
 			res = False
 			
 		if not ARG_CROSSOVER_FILE in arg_keys:
-			print "  You must provide a crossover file (-%s <file>)" % ARG_CROSSOVER_FILE
+			print("  You must provide a crossover file (-%s <file>)" % ARG_CROSSOVER_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_CROSSOVER_FILE]):
-			print "  Can't find crossover file %s" % arg_dict[ARG_CROSSOVER_FILE]
+			print("  Can't find crossover file %s" % arg_dict[ARG_CROSSOVER_FILE])
 			res = False
 			
 		if not ARG_CONTACT_FILE in arg_keys:
-			print "  You must provide a contact file (-%s <file>)" % ARG_CONTACT_FILE
+			print("  You must provide a contact file (-%s <file>)" % ARG_CONTACT_FILE)
 			res = False
 		elif not os.path.isfile(arg_dict[ARG_CONTACT_FILE]):
-			print "  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE]
+			print("  Can't find contact file %s" % arg_dict[ARG_CONTACT_FILE])
 			res = False
 			
-		if not (arg_dict.has_key(ARG_PRINT_E) or arg_dict.has_key(ARG_PRINT_M)):
-			print "  No output specified; use -E to print disruption and/or -m to print mutation"
+		if not (ARG_PRINT_E in arg_dict or ARG_PRINT_M in arg_dict):
+			print("  No output specified; use -E to print disruption and/or -m to print mutation")
 			res = False
-	except Exception, e:
+	except Exception as e:
 		raise e
-		res = False
 	return res
 
 def outputEnergies(chimera_blocks, contacts, fragments, parents, output_file, output_string, print_E, print_m):
@@ -130,7 +129,6 @@ def outputEnergies(chimera_blocks, contacts, fragments, parents, output_file, ou
 	if print_m:
 		m = schema.getChimeraShortestDistance(chimera_blocks, fragments, parents)
 		output_vars = output_vars + [m]
-	#print output_vars
 	output_file.write(output_string % tuple(output_vars))
 	return (E,m)
 
@@ -150,25 +148,25 @@ def main(args):
 	#   The alignment/fragment file name.
 	msa_file = arg_dict[ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE]
 
-	if arg_dict.has_key(ARG_PRINT_E):
+	if ARG_PRINT_E in arg_dict:
 		print_E = True
-	if arg_dict.has_key(ARG_PRINT_M):
+	if ARG_PRINT_M in arg_dict:
 		print_m = True
 
 	# Read the alignment file to create a list of parents.
 	# The parents will appear in the list in the order in which they appear in the file.
-	parent_list = schema.readMultipleSequenceAlignmentFile(file(msa_file, 'r'))
+	parent_list = schema.readMultipleSequenceAlignmentFile(open(msa_file, 'r'))
 	parents = [p for (k,p) in parent_list]
 	
-	crossovers = schema.readCrossoverFile(file(arg_dict[ARG_CROSSOVER_FILE], 'r'))
+	crossovers = schema.readCrossoverFile(open(arg_dict[ARG_CROSSOVER_FILE], 'r'))
 	fragments = schema.getFragments(crossovers, parents[0])
 
 	# Get the contacts
-	pdb_contacts = schema.readContactFile(file(arg_dict[ARG_CONTACT_FILE], 'r'))
+	pdb_contacts = schema.readContactFile(open(arg_dict[ARG_CONTACT_FILE], 'r'))
 	contacts = schema.getSCHEMAContactsWithCrossovers(pdb_contacts, parents, crossovers)
 	
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
-		output_file = file(arg_dict[ARG_OUTPUT_FILE], 'w')
+	if ARG_OUTPUT_FILE in arg_dict:
+		output_file = open(arg_dict[ARG_OUTPUT_FILE], 'w')
 
 	# Now, what does the user want?
 	output_string = '%s'
@@ -182,7 +180,7 @@ def main(args):
 	output_string += '\n'
 	output_file.write('\n')
 	
-	if arg_dict.has_key(ARG_CHIMERAS): # Print values for chimeras
+	if ARG_CHIMERAS in arg_dict: # Print values for chimeras
 		chimeras = arg_dict[ARG_CHIMERAS]
 		# Could be a) a chimera, b) a list of chimeras, or c) a file of chimeras.
 		if type(chimeras) is list:
@@ -191,7 +189,7 @@ def main(args):
 				outputEnergies(chimera_blocks, contacts, fragments, parents, output_file, output_string, print_E, print_m)
 		elif os.path.isfile(chimeras):
 			# It's a file of chimeras
-			for line in file(chimeras,'r').readlines():
+			for line in open(chimeras, 'r').readlines():
 				chimera_blocks = line.strip()
 				outputEnergies(chimera_blocks, contacts, fragments, parents, output_file, output_string, print_E, print_m)
 		else:
@@ -204,7 +202,7 @@ def main(args):
 		n = len(fragments)
 		Es = []
 		ms = []
-		for i in xrange(len(parents)**len(fragments)):
+		for i in range(len(parents)**len(fragments)):
 			# The next two lines turn i into a chimera block pattern 
 			# (e.g., 0 -> '11111111', 1 -> '11111112', 2 -> '11111113'...)
 			n2c = schema.base(i,p)
@@ -221,7 +219,7 @@ def main(args):
 			mean_str = "# Average mutation <m> = %1.4f\n" % schema.mean(ms)
 			output_file.write(mean_str)
 	
-	if arg_dict.has_key(ARG_OUTPUT_FILE):
+	if ARG_OUTPUT_FILE in arg_dict:
 		output_file.close()
 
 
