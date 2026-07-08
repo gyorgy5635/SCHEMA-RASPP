@@ -31,7 +31,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, os
-import pdb, schema
+import pdbfile, schema
 
 ARG_PRINT_E = 'E'
 ARG_PRINT_M = 'm'

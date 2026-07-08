@@ -31,7 +31,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, os, math, random, time
-import pdb, schema, raspp
+import pdbfile, schema, raspp
 
 ARG_MULTIPLE_SEQUENCE_ALIGNMENT_FILE = 'msa'
 ARG_CONTACT_FILE = 'con'

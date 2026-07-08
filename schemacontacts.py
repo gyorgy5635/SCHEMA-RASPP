@@ -31,7 +31,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, os
-import pdb, schema
+import pdbfile, schema
 
 ARG_PDB_FILE = 'pdb'
 ARG_PDB_ALIGNMENT_FILE = 'pdbal'
@@ -127,7 +127,7 @@ def main(args):
 		else:
 			parent_pdb_alignment_file = arg_dict[ARG_PDB_ALIGNMENT_FILE]
 	else:
-		pdb_key = pdb.File().getIDCode(open(pdb_file, 'r'))
+		pdb_key = pdbfile.File().getIDCode(open(pdb_file, 'r'))
 		
 	# The PDB chains
 	# Many PDB files include multiple chains.  The chain_identifier list includes those
@@ -150,7 +150,7 @@ def main(args):
 
 	# Generate the contacts
 	# Read in the PDB file to create a list of residues.
-	residues = pdb.File().read(open(pdb_file, 'r'))
+	residues = pdbfile.File().read(open(pdb_file, 'r'))
 	# Because the PDB file's residue sequence may differ from those of the parents, we
 	# must align the PDB residues to one parent.
 	if not parent_pdb_alignment_file:  # Just get PDB sequence from the multiple sequence alignment
@@ -192,7 +192,7 @@ def main(args):
 		print("The PDB-aligned parent and the named parent, %s, don't match!  Aborting..." % (pdb_key,))
 		return
 	# Check to ensure the aligned PDB sequence matches the residue sequence pulled directly from the PDB file.
-	if aligned_pdb.replace('-','') != pdb.sequence(residues, chain_identifiers):
+	if aligned_pdb.replace('-','') != pdbfile.sequence(residues, chain_identifiers):
 		print("The parent-aligned PDB sequence, %s, and the PDB file sequence, chain(s) %s in %s, don't match!  Aborting..." % (pdb_key, chain_identifiers, pdb_file))
 		return
 	

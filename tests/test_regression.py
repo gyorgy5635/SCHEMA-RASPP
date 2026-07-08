@@ -28,8 +28,8 @@ def run(*args):
 
 
 def run_py(snippet):
-    """Run an inline snippet with cwd=ROOT so the repo's local `pdb`/`schema`/
-    `raspp` modules import correctly (and don't shadow stdlib pdb in-process)."""
+    """Run an inline snippet with cwd=ROOT so the repo's `schema`/`raspp`/
+    `pdbfile` modules import correctly."""
     p = subprocess.run([sys.executable, "-c", snippet], cwd=ROOT,
                        capture_output=True, text=True)
     assert p.returncode == 0, f"snippet failed:\n{p.stderr}"

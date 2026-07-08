@@ -60,18 +60,21 @@ pytest -m ""        # everything
 
 Golden fixtures in `tests/golden/` were captured from the **original Python 2.7**
 code (except the RASPP curve, regenerated after the determinism fix). Tests run
-the tools via `subprocess` from the repo root, matching real usage.
+the tools via `subprocess` from the repo root, matching real usage. Both
+`pytest` and `python -m pytest` work.
 
-Use the `pytest` console script, **not** `python -m pytest`: the latter puts the
-repo root on `sys.path`, where the local `pdb.py` shadows the stdlib `pdb` that
-pytest imports.
+## Second fix: rename `pdb.py` -> `pdbfile.py`
 
-## Known follow-ups (not done here; out of scope for the fix pass)
+The package shipped a top-level module named `pdb.py` (its PDB-structure parser),
+which shadows Python's standard-library `pdb` debugger. This broke
+`python -m pytest` (pytest imports the stdlib `pdb`) and prevented clean use as a
+library. It is now `pdbfile.py`, with `import pdb`/`pdb.X` updated to
+`pdbfile` in `schema.py`, `schemacontacts.py`, `schemaenergy.py`,
+`schemarandom.py`, `rasppcurve.py`, and `pdbseq.py`. The `-pdb` command-line flag
+is unchanged.
 
-- **Rename `pdb.py`** (e.g. to `pdbfile.py`) — it shadows the standard-library
-  `pdb` debugger, which is why `python -m pytest` breaks and why the package
-  can't be cleanly imported as a library. Contained change: update `import pdb`
-  in `schema.py`, `schemacontacts.py`, `pdbseq.py`.
+## Known follow-ups (out of scope for this pass)
+
 - Package properly (`pyproject.toml`, `python_requires>=3.9`, entry points).
 - Add GitHub Actions CI running `pytest`.
 - `schemarandom.py` uses the `random` module; Python 2 and 3 produce different
