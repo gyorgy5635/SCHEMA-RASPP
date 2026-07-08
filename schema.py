@@ -33,7 +33,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, string, random
-import pdb
+import pdbfile
 
 DIGITS_LETTERS = string.digits + string.ascii_letters
 
@@ -79,24 +79,24 @@ def alignPDBResidues(residues, aligned_parent_protein, aligned_pdb_protein, libr
 				j += 1
 				k += 1
 			elif parj == pdbj == li: # All have gaps
-				new_residues.append(pdb.Residue(None))
+				new_residues.append(pdbfile.Residue(None))
 				j += 1
 		else: # parent does not contain a gap at i
 			# While the aligned parent doesn't match the library parent,
 			# advance the indices.  This brings the sequences back into
 			# register.
-			pdbres = pdb.three_to_one_map[residues[k].residue]
+			pdbres = pdbfile.three_to_one_map[residues[k].residue]
 			while aligned_parent_protein[j] != li:
-				pdbres = pdb.three_to_one_map[residues[k].residue]
+				pdbres = pdbfile.three_to_one_map[residues[k].residue]
 				if aligned_pdb_protein[j] != '-':
 					k += 1
 				j += 1
 			# Now, if the aligned PDB has a gap, insert a gap
 			# into the residues list, otherwise insert the residue.
 			if aligned_pdb_protein[j] == '-':
-				new_residues.append(pdb.Residue(None))
+				new_residues.append(pdbfile.Residue(None))
 			else:
-				pdbres = pdb.three_to_one_map[residues[k].residue]
+				pdbres = pdbfile.three_to_one_map[residues[k].residue]
 				# Check to make sure we're adding the expected residue
 				if aligned_pdb_protein[j] != pdbres:
 					err_string = "Expected residue %s at aligned position %d based on alignment, but PDB had %s at corresponding residue %d.  Aborting..."
