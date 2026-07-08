@@ -16,7 +16,14 @@ output on the bundled β-lactamase example, and `raspp.curve()` was made
 deterministic. See **PORTING.md** for details and the note that the values in
 `schema-tools-doc.html` are stale illustrations.
 
-Quick start (β-lactamase example):
+Install (optional; also runnable directly as `python <script>.py`):
+
+    pip install .            # or  pip install -e ".[test]"  for development
+
+This installs console commands `schema-contacts`, `schema-energy`,
+`schema-rasppcurve`, `schema-random`, and `schema-pdbseq`.
+
+Quick start (β-lactamase example — using the scripts directly):
 
     python schemacontacts.py -msa lac-msa.txt -pdb 1G68.pdb -pdbal PSE4-1G68.txt -o contacts.txt
     python schemaenergy.py  -msa lac-msa.txt -con contacts.txt -xo lac-xo.txt -chim 13111111 13121231 -E -m

@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schema-raspp"
+version = "1.0.0"
+description = "SCHEMA energy and RASPP algorithm for structure-guided protein recombination (Python 3 port)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Matthew A. Smith" }]
+maintainers = [{ name = "gyorgy5635" }]
+keywords = ["SCHEMA", "RASPP", "protein engineering", "recombination", "chimera", "bioinformatics"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: OS Independent",
+]
+dependencies = []   # pure standard library
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/gyorgy5635/SCHEMA-RASPP"
+Upstream = "https://github.com/mattasmith/SCHEMA-RASPP"
+
+# Console commands (the scripts still also run as `python <name>.py ...`).
+[project.scripts]
+schema-contacts = "schemacontacts:main_wrapper"
+schema-energy = "schemaenergy:main_wrapper"
+schema-rasppcurve = "rasppcurve:main_wrapper"
+schema-random = "schemarandom:main_wrapper"
+schema-pdbseq = "pdbseq:main_wrapper"
+
+# Flat layout: these top-level modules import each other by bare name
+# (import schema, import raspp, import pdbfile, ...), so keep them as py-modules
+# rather than repackaging under a src/ package.
+[tool.setuptools]
+py-modules = [
+    "schema", "raspp", "pdbfile", "schemautil",
+    "schemacontacts", "schemaenergy", "rasppcurve", "schemarandom", "pdbseq",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: end-to-end RASPP runs (tens of seconds)"]

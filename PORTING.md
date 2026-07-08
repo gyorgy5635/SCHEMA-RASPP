@@ -73,10 +73,20 @@ library. It is now `pdbfile.py`, with `import pdb`/`pdb.X` updated to
 `schemarandom.py`, `rasppcurve.py`, and `pdbseq.py`. The `-pdb` command-line flag
 is unchanged.
 
+## Packaging & CI
+
+- `pyproject.toml` (setuptools, flat `py-modules`, `requires-python>=3.9`, no
+  runtime dependencies) makes the project `pip install`-able and exposes console
+  commands `schema-contacts`, `schema-energy`, `schema-rasppcurve`,
+  `schema-random`, `schema-pdbseq` (the CLI scripts gained `if __name__ ==
+  '__main__'` guards so they import cleanly for these entry points; running them
+  as `python <script>.py ...` still works). Pytest config lives in the
+  `[tool.pytest.ini_options]` table.
+- `.github/workflows/ci.yml` runs the full suite on Python 3.9–3.13 and builds
+  the wheel/sdist, verifying the console entry points install.
+
 ## Known follow-ups (out of scope for this pass)
 
-- Package properly (`pyproject.toml`, `python_requires>=3.9`, entry points).
-- Add GitHub Actions CI running `pytest`.
 - `schemarandom.py` uses the `random` module; Python 2 and 3 produce different
   streams for the same seed, so its output is *not* expected to match Py2. Lock a
   Py3-only golden if reproducibility there matters.
