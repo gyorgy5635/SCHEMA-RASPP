@@ -7,6 +7,26 @@ These tools can calculate SCHEMA energies of chimeric proteins and run the RASPP
 
 SCHEMA was developed in the laboratory of Frances H. Arnold at the California Institute of Technology.
 
+Python 3
+--------
+
+This fork runs on Python 3 (tested on 3.9–3.13); the original tools targeted
+Python 2. The port is verified byte-for-byte against the original Python 2.7
+output on the bundled β-lactamase example, and `raspp.curve()` was made
+deterministic. See **PORTING.md** for details and the note that the values in
+`schema-tools-doc.html` are stale illustrations.
+
+Quick start (β-lactamase example):
+
+    python schemacontacts.py -msa lac-msa.txt -pdb 1G68.pdb -pdbal PSE4-1G68.txt -o contacts.txt
+    python schemaenergy.py  -msa lac-msa.txt -con contacts.txt -xo lac-xo.txt -chim 13111111 13121231 -E -m
+    python rasppcurve.py    -msa lac-msa.txt -con contacts.txt -xo 7 -min 4 -o curve.txt
+
+Tests:
+
+    pytest            # fast regression suite (~2 s)
+    pytest -m slow    # end-to-end RASPP curve (~1 min)
+
 References:
 
 Voigt, C. et al., "Protein building blocks preserved by recombination," Nature Structural Biology 9(7):553-558 (2002).

@@ -422,7 +422,11 @@ def curve(results, parents, bin_width, max_samples=1e10):
 	unique_results = set([(avg_energy, tuple(crossovers)) for (avg_energy, crossovers, l_min, l_max) in results])
 	# Now compute the average mutation levels for these unique libraries.
 	avg_E_ms = []
-	for (avg_energy, crossovers) in unique_results:
+	# Iterate in sorted order so the result is reproducible: `unique_results` is a
+	# set, and set iteration order differs between Python 2 and 3 (and is not
+	# guaranteed stable), which otherwise makes the tie-broken curve points below
+	# depend on the interpreter rather than the algorithm.
+	for (avg_energy, crossovers) in sorted(unique_results):
 		crossovers = list(crossovers)
 		fragments = schema.getFragments(crossovers, parents[0])
 		avg_m = schema.averageMutationSampled(fragments, parents, max_samples)
@@ -443,8 +447,11 @@ def curve(results, parents, bin_width, max_samples=1e10):
 		# If there's an existing value in this bin, check it
 		if approx_curve[bin_number]:
 			(E_old, m_old, crossovers_old) = approx_curve[bin_number]
-			# If lower E in this bin, substitute it
-			if E < E_old:
+			# Keep the best design in this bin: lowest average energy, and on an
+			# energy tie the lower average mutation (a strictly better library).
+			# The tie-break makes the choice deterministic instead of depending on
+			# set-iteration order.
+			if (E, m) < (E_old, m_old):
 				approx_curve[bin_number] = (E, m, crossovers)
 		else:  # Otherwise just add it
 			approx_curve[bin_number] = (E, m, crossovers)
